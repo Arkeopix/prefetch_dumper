@@ -9,6 +9,13 @@
 #include "prefetch.h"
 #include "utils.h"
 
+int32_t read_four_bytes(uint8_t buffer[], size_t *offset) {
+	uint32_t ret;
+	ret = bytes_to_uint32(buffer, *offset);
+	*offset += 4;
+	return ret;
+}
+
 uint32_t bytes_to_uint32(const uint8_t buffer[], const size_t offset) {
 	btoui32.byte[0] = buffer[offset];
 	btoui32.byte[1] = buffer[offset + 1];

@@ -9,13 +9,6 @@
 #include "dump_info.h"
 #include "utils.h"
 
-static uint32_t read_four_bytes(uint8_t buffer[], size_t *offset) {
-	uint32_t ret;
-	ret = bytes_to_uint32(buffer, *offset);
-	*offset += 4;
-	return ret;
-}
-
 static time_t get_execution_time(uint8_t buffer[], size_t *offset) {
 	time_t timestamp = bytes_to_unix_timestamp(buffer, *offset);
 	*offset += 8;

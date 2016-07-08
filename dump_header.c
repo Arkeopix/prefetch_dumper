@@ -11,7 +11,7 @@
 static uint32_t dump_version(uint8_t buffer[], size_t *offset) {
 	uint32_t version = bytes_to_uint32(buffer, *offset);
 
-	fprintf(stdout, "Prefetch version: 0x%X\n", version);
+	fprintf(stdout, "Prefetch version:\t0x%X\n", version);
 	*offset += 4;
 	return version;
 }
@@ -71,8 +71,8 @@ uint32_t dump_file_header(const int8_t fd) {
 	}
 	buffer[HEADER_LEN] = 0;
 
+        fprintf(stdout, "#------ HEADER ------#\n");
 	version = dump_version(buffer, &i);
-	fprintf(stdout, "#------ HEADER ------#\n");
 	dump_signature(buffer, &i);
 	dump_file_length(buffer, &i);
 	if (dump_exec_name(buffer, &i) == (uint8_t) -1) {
