@@ -30,15 +30,15 @@ static void dump_file_metrics_0x11(const int8_t fd, t_prefetch_info *info) {
 }
 
 static void dump_file_metrics_0x17(const int8_t fd, t_prefetch_info *info) {
-  uint8_t buffer[SEC_A_SIZE_0X17 + 1], mft_bytes[6];
-	size_t i = 0, j = 0;
+        uint8_t buffer[SEC_A_SIZE_0X17 + 1], mft_bytes[6];
+	size_t i = 0;
         uint32_t tmp_index = 0;
         uint32_t ctr = 0;
         uint64_t *mft_entry = NULL;
         uint16_t *mft_seq = NULL;
 
         /* I supose the first 5 entries are somewhat nice enough*/
-        while (ctr < 5) {
+        while (ctr < (size_t)((info->entries_in_section_A <= 5) ? : 5)) {
           fprintf(stdout, "32 bytes array: entrie %d at offset %d\n", ctr, info->entries_in_section_A + tmp_index);
           lseek(fd, (off_t)info->offset_to_section_A + tmp_index, SEEK_SET);
           memset(&buffer, 0, SEC_A_SIZE_0X17);
@@ -56,22 +56,22 @@ static void dump_file_metrics_0x17(const int8_t fd, t_prefetch_info *info) {
           i += 4;
           info->filename_string_offset_in_section_C[ctr] = read_four_bytes(buffer, &i);
           info->filename_string_len_in_section_C[ctr] = read_four_bytes(buffer, &i);
-          printf("\tfilename_string_offset\t%" PRIu32 "\n", info->filename_string_offset_in_section_C[ctr]);
-          printf("\tfilename_string_len\t%" PRIu32 "\n", info->filename_string_len_in_section_C[ctr]);
+          fprintf(stdout, "\tfilename_string_offset\t%" PRIu32 "\n", info->filename_string_offset_in_section_C[ctr]);
+          fprintf(stdout, "\tfilename_string_len\t%" PRIu32 "\n", info->filename_string_len_in_section_C[ctr]);
           i += 4; /* We skip 4 bytes because we don't know shit about them */
           
           /* read in the file ref */
           if (buffer[i] != 0) {
             memcpy(mft_bytes, buffer + i, 6);
             mft_entry = (uint64_t *)&mft_bytes[0];
-            printf("\tMft entry\t\t%" PRIu64 "\n", *mft_entry);
-            i+= 6;
+            fprintf(stdout, "\tMft entry\t\t%" PRIu64 "\n", *mft_entry);
+            i+= 6; /* We just read 6 bytes from the buffer */
             memset(mft_bytes, 0, 6);
             memcpy(mft_bytes, buffer + i, 2);
             mft_seq = (uint16_t *)&mft_bytes[0];
             /* If a lot of seq numbers qre the same: https://jmharkness.wordpress.com/2011/01/27/mft-file-reference-number/ */
-            /* ntfs seems o be all about reusing sesquence numbers... But i may be totally wrong */
-            printf("\tMft sequence number\t%" PRIu16 "\n", *mft_seq);
+            /* ntfs seems to be all about reusing sesquence numbers... But i may be totally wrong */
+            fprintf(stdout, "\tMft sequence number\t%" PRIu16 "\n", *mft_seq);
           }
           
           tmp_index += SEC_A_SIZE_0X17;
@@ -81,7 +81,7 @@ static void dump_file_metrics_0x17(const int8_t fd, t_prefetch_info *info) {
 }
 
 void dump_file_metrics(const int8_t fd, const uint32_t prefetch_version, t_prefetch_info *info) {
-	fprintf(stdout, "#------ METRICS ------#\n");
+	fprintf(stdout, "#------ FILE METRICS ARRAY ------#\n");
 	switch (prefetch_version) {
 	case 0x11:
 		dump_file_metrics_0x11(fd, info); 

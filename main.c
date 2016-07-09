@@ -10,6 +10,7 @@
 #include "dump_header.h"
 #include "dump_info.h"
 #include "dump_file_metrics.h"
+#include "dump_trace_chains.h"
 
 int main(int argc, char *argv[]) {
 	int8_t fd;
@@ -32,7 +33,8 @@ int main(int argc, char *argv[]) {
 
 	dump_file_info(&info, version, fd);
 	dump_file_metrics(fd, version, &info);
-	
+        dump_trace_chains(fd, version, &info);
+        
 	if (close(fd) < 0) {
 		fprintf(stderr, "%s\n", strerror(errno));
 		return -1;
