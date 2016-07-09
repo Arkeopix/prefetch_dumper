@@ -17,6 +17,8 @@ TODO:
  - parse section D
  - parse sub-section E
  - parse sub-section F
+ - convert all digit value to hex
+ - dump unknown values anyway, as hex bytes à la hexdump
  - refactor code to make it cleaner
    - Make sure to be consitent with utility function: union or pointer tricks ?
    - get rid of those stupid read_(four|eight)_bytes() functions.
