@@ -19,7 +19,9 @@ union {
 } btoui64;
 
 int32_t read_four_bytes(uint8_t buffer[], size_t *offset);
+uint64_t read_eight_bytes(uint8_t buffer[], size_t *offset);
 uint32_t bytes_to_uint32(const uint8_t buffer[], const size_t offset);
+uint64_t bytes_to_uint64(const uint8_t buffer[], const size_t offset);
 time_t bytes_to_unix_timestamp(const uint8_t buffer[], const size_t offset);
 char *bytes_to_string(char *buff16, char *buff8, size_t buff16_len, size_t buff8_len);
 

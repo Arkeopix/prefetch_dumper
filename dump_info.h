@@ -23,6 +23,7 @@ typedef struct {
         /* as we dump the first 5 entries of section A we only need to store 5 of each */
         uint32_t filename_string_offset_in_section_C[5];
         uint32_t filename_string_len_in_section_C[5];
+        uint64_t file_ref[5];
 } t_prefetch_info;
 
 void dump_file_info(t_prefetch_info *info, const uint32_t prefetch_version, const int8_t fd);
