@@ -4,68 +4,88 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include <time.h>
 
+#include "reader.h"
 #include "prefetch.h"
 #include "utils.h"
 
-int32_t read_four_bytes(uint8_t buffer[], size_t *offset) {
-	uint32_t ret;
-	ret = bytes_to_uint32(buffer, *offset);
-	*offset += 4;
-	return ret;
+uint16_t bytes_to_uint16(const uint8_t buffer[]) {
+  btoui16.byte[0] = buffer[0];
+  btoui16.byte[1] = buffer[1];
+  return btoui16.nbr;
 }
 
-uint64_t read_eight_bytes(uint8_t buffer[], size_t *offset) {
-        uint64_t ret;
-        ret = bytes_to_uint64(buffer, *offset);
-        *offset += 8;
-        return ret;
+uint32_t bytes_to_uint32(const uint8_t buffer[]) {
+  btoui32.byte[0] = buffer[0];
+  btoui32.byte[1] = buffer[1];
+  btoui32.byte[2] = buffer[2];
+  btoui32.byte[3] = buffer[3];
+  return btoui32.nbr;
 }
 
-uint32_t bytes_to_uint32(const uint8_t buffer[], const size_t offset) {
-	btoui32.byte[0] = buffer[offset];
-	btoui32.byte[1] = buffer[offset + 1];
-	btoui32.byte[2] = buffer[offset + 2];
-	btoui32.byte[3] = buffer[offset + 3];
-	return btoui32.nbr;
+uint64_t bytes_to_uint64(const uint8_t buffer[]) {
+  btoui64.byte[0] = buffer[0];
+  btoui64.byte[1] = buffer[1];
+  btoui64.byte[2] = buffer[2];
+  btoui64.byte[3] = buffer[3];
+  btoui64.byte[4] = buffer[4];
+  btoui64.byte[5] = buffer[5];
+  btoui64.byte[6] = buffer[6];
+  btoui64.byte[7] = buffer[7];
+  return btoui64.nbr;
 }
 
-uint64_t bytes_to_uint64(const uint8_t buffer[], const size_t offset) {
-	btoui64.byte[0] = buffer[offset];
-	btoui64.byte[1] = buffer[offset + 1];
-	btoui64.byte[2] = buffer[offset + 2];
-	btoui64.byte[3] = buffer[offset + 3];
-	btoui64.byte[4] = buffer[offset + 4];
-	btoui64.byte[5] = buffer[offset + 5];
-	btoui64.byte[6] = buffer[offset + 6];
-	btoui64.byte[7] = buffer[offset + 7];
-	return btoui64.nbr;
+uint8_t *read_bytes(const uint64_t bytes_to_read) {
+  uint8_t *bytes = NULL;
+  
+  bytes = r.in(bytes_to_read);
+  if (bytes == NULL) {
+    return 0;
+  }
+  return bytes;
 }
 
-char *bytes_to_string(char *buff16, char *buff8, size_t buff16_len, size_t buff8_len) {
-	iconv_t cd;
-	/* Ok i have no idea why len8 must be 38 */
-	/* in posix a char is 8bits, so utf16 should be 16bits or 2 bytes */
-	/* if the input buffer is 60 bytes long, then dividing it by 2 gives us 30 */
-	/* but setting len8 to 30 makes iconv set errno to E2BIG... */
-	/* Maybe i'm just plain dumb or something but i just dont get it */
-	size_t len16 = buff16_len, len8 = buff8_len;
-	char *_buff16 = buff16, *_buff8 = buff8;
-	
-	if ((cd = iconv_open("UTF-8", "UTF-16LE")) == (iconv_t) -1) {
-		fprintf(stderr, "%s\n", strerror(errno));
-		return NULL;
-	}
-	if ((iconv(cd, &_buff16, &len16, &_buff8, &len8)) == (size_t) -1) {
-		fprintf(stderr, "%s\n", strerror(errno));
-		return NULL;
-	}
-	iconv_close(cd);
-	return strdup(buff8);
+uint32_t read_uint32() {
+  uint8_t *bytes = NULL;
+  uint32_t ret;
+  
+  bytes = r.in(4);
+  if (bytes == NULL) {
+    return -1;
+  }
+  ret = bytes_to_uint32(bytes);
+  free(bytes);
+  return ret;
 }
 
-time_t bytes_to_unix_timestamp(const uint8_t buffer[], const size_t offset) {
-	uint64_t windows_time = bytes_to_uint64(buffer, offset);
-	return windows_time / WINDOWS_TICK - WINDOWS_TO_UNIX_DIFFERENCE;
+char *read_string_utf16_to_utf8(const uint64_t bytes_to_read) {
+  uint8_t *buffer = NULL;
+  size_t len16 = bytes_to_read, len8 = bytes_to_read / 2;
+  char buff8[4096], *_buf8 = buff8;
+  iconv_t cd;
+  ssize_t ret;
+  
+  buffer = r.in(bytes_to_read);
+  cd = iconv_open("UTF-8", "UTF-16LE");
+  if (cd == (iconv_t) -1) {
+    perror("Could not convert string from utf16 to utf8");
+    return NULL;
+  }
+  ret = iconv(cd, (char **)&buffer, &len16, &_buf8, &len8 + 1);
+  if (ret == -1) {
+    perror("Could not convert string from utf16 to utf8");
+    return NULL;
+  }
+  iconv_close(cd);
+  return strdup(buff8);
+}
+
+time_t read_timestamp_win_to_unix() {
+  uint8_t *buffer;
+  buffer = r.in(8);
+  uint64_t windows_time = bytes_to_uint64(buffer);
+  free(buffer);
+  return windows_time / WINDOWS_TICK - WINDOWS_TO_UNIX_DIFFERENCE;
 }

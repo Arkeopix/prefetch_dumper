@@ -9,20 +9,20 @@ So far, one can see the following:
  - Path hash
  - Last execution
  - Run count
- - File metrics: i'm not quite sure about those values
- - Trace chains: i'm not quite sure about those values
+ - File metrics
+ - Trace chains
 
 TODO:
+ - refactor code to make it cleaner
+   - get rid of uncalled function and superfluous includes
+   - rewrite code to get the info first, then print it. It will be easier this way.
+   - get rid of those stupid read_(four|eight)_bytes() functions.
  - parse section C
  - parse section D
  - parse sub-section E
  - parse sub-section F
  - convert all digit value to hex
  - dump unknown values anyway, as hex bytes à la hexdump
- - refactor code to make it cleaner
-   - Make sure to be consitent with utility function: union or pointer tricks ?
-   - get rid of those stupid read_(four|eight)_bytes() functions.
-   - maybe create a struct reader to handle all the reads instead of relying on offset and lseeks
  - make sure to test every prefetch version
    - Write a win10 prefetch decompresser
  - Make sure to double check the results, and maybe ask for people that knows best.

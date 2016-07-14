@@ -1,16 +1,17 @@
 NAME	=	prefetchdump
 SRC	=	main.c				\
 		utils.c				\
-		dump_header.c			\
+		reader.c			\
 		dump_info.c			\
 		dump_file_metrics.c		\
-		dump_trace_chains.c
+		dump_trace_chains.c		\
+		dump_filename_strings.c
 OBJ	=	${SRC:.c=.o}
 CFLAGS	=	-std=c99 -Wpedantic -Wall -Wextra \
 		-Wformat-security -w -Werror -pipe \
 		-Wunused
 ${NAME}:	${OBJ}
-		${CC} -g ${OBJ} ${CFLAGS} -o ${NAME}
+		${CC} ${OBJ} -g  ${CFLAGS} -o ${NAME}
 all:		${NAME}
 clean:
 		${RM} ${OBJ}
