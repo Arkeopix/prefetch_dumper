@@ -7,10 +7,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <time.h>
 
-#include "prefetch.h"
 #include "reader.h"
-#include "utils.h"
+#include "prefetch.h"
 
 static void dump_volume_info_23(t_pf *prefetch) {
   uint32_t idx = 0, file_ref_count = 0, string_count = 0;
@@ -18,37 +18,37 @@ static void dump_volume_info_23(t_pf *prefetch) {
   
   prefetch->volume_info = calloc(prefetch->info.entries_d, sizeof(t_pf_volume_info));
   while (idx < prefetch->info.entries_d) {
-    prefetch->volume_info[idx].offset_to_volume_device_path = read_uint32();
-    prefetch->volume_info[idx].len_volume_device_path = read_uint32();
-    prefetch->volume_info[idx].volume_creation_time = read_timestamp_win_to_unix();
-    prefetch->volume_info[idx].volume_serial_number = read_uint32();
-    prefetch->volume_info[idx].offset_to_subsec_e = read_uint32();
-    prefetch->volume_info[idx].len_subsec_e = read_uint32();
-    prefetch->volume_info[idx].offset_to_subsec_f = read_uint32();
-    prefetch->volume_info[idx].entries_subsec_f = read_uint32();
-    prefetch->volume_info[idx].unknown_value_volumeinfo1 = read_bytes(4);
-    prefetch->volume_info[idx].unknown_value_volumeinfo2 = read_bytes(28);
-    prefetch->volume_info[idx].unknown_value_volumeinfo3 = read_bytes(4);
-    prefetch->volume_info[idx].unknown_value_volumeinfo4 = read_bytes(28);
-    prefetch->volume_info[idx].unknown_value_volumeinfo5 = read_bytes(4);
+    prefetch->volume_info[idx].offset_to_volume_device_path = r.read_uint32();
+    prefetch->volume_info[idx].len_volume_device_path = r.read_uint32();
+    prefetch->volume_info[idx].volume_creation_time = r.read_timestamp_win_to_unix();
+    prefetch->volume_info[idx].volume_serial_number = r.read_uint32();
+    prefetch->volume_info[idx].offset_to_subsec_e = r.read_uint32();
+    prefetch->volume_info[idx].len_subsec_e = r.read_uint32();
+    prefetch->volume_info[idx].offset_to_subsec_f = r.read_uint32();
+    prefetch->volume_info[idx].entries_subsec_f = r.read_uint32();
+    prefetch->volume_info[idx].unknown_value_volumeinfo1 = r.read_bytes(4);
+    prefetch->volume_info[idx].unknown_value_volumeinfo2 = r.read_bytes(28);
+    prefetch->volume_info[idx].unknown_value_volumeinfo3 = r.read_bytes(4);
+    prefetch->volume_info[idx].unknown_value_volumeinfo4 = r.read_bytes(28);
+    prefetch->volume_info[idx].unknown_value_volumeinfo5 = r.read_bytes(4);
 
     r.set(prefetch->info.offset_sec_d + prefetch->volume_info[idx].offset_to_volume_device_path);
-    prefetch->volume_info[idx].volume_name = read_string_utf16_to_utf8(prefetch->volume_info[idx].len_volume_device_path * 2);
+    prefetch->volume_info[idx].volume_name = r.read_string_utf16_to_utf8(prefetch->volume_info[idx].len_volume_device_path * 2);
 
     prefetch->volume_info[idx].file_refs = calloc(prefetch->volume_info[idx].len_subsec_e / 8, sizeof(t_pf_file_ref));
     r.set(prefetch->info.offset_sec_d + prefetch->volume_info[idx].offset_to_subsec_e);
     while (file_ref_count < prefetch->volume_info[idx].len_subsec_e / 8) {
-      prefetch->volume_info[idx].file_refs[file_ref_count].mft_entry_index = read_file_ref(read_bytes(6));
-      prefetch->volume_info[idx].file_refs[file_ref_count].seq_number = bytes_to_uint16(read_bytes(2));
+      prefetch->volume_info[idx].file_refs[file_ref_count].mft_entry_index = r.read_mft_entry();
+      prefetch->volume_info[idx].file_refs[file_ref_count].seq_number = r.read_uint16();
       file_ref_count++;
     }
 
     prefetch->volume_info[idx].directory_strings = calloc(prefetch->volume_info[idx].entries_subsec_f, sizeof(char *));
     r.set(prefetch->info.offset_sec_d + prefetch->volume_info[idx].offset_to_subsec_f);
     while (string_count < prefetch->volume_info[idx].entries_subsec_f) {
-      string_len = read_seq_nbr(read_bytes(2));
+      string_len = r.read_uint16();
       prefetch->volume_info[idx].directory_strings[string_count] = calloc(string_len, sizeof(char));
-      prefetch->volume_info[idx].directory_strings[string_count] = read_string_utf16_to_utf8(string_len * 2 + 2);
+      prefetch->volume_info[idx].directory_strings[string_count] = r.read_string_utf16_to_utf8(string_len * 2 + 2);
       string_count++;
     }
     idx++;
@@ -78,7 +78,7 @@ static void dump_filename_strings_17(t_pf *prefetch) {
   while (idx < prefetch->info.entries_a) {
     prefetch->filename_strings[idx] = calloc(prefetch->metrics[idx].filename_string_len, sizeof(char));
     r.set(filename_offset + prefetch->metrics[idx].filename_string_offset);
-    prefetch->filename_strings[idx] = read_string_utf16_to_utf8(prefetch->metrics[idx].filename_string_len * 2);
+    prefetch->filename_strings[idx] = r.read_string_utf16_to_utf8(prefetch->metrics[idx].filename_string_len * 2);
 
     printf("%s\n", prefetch->filename_strings[idx]);
     idx++;
@@ -103,11 +103,11 @@ void dump_trace_chains_17(t_pf *prefetch) {
 
   prefetch->trace_chains = calloc(prefetch->info.entries_b, sizeof(t_pf_trace_chains));
   while (idx < prefetch->info.entries_b) {
-    prefetch->trace_chains[idx].next_array_entry_index = read_uint32();
-    prefetch->trace_chains[idx].total_block_load_count = read_uint32();
-    prefetch->trace_chains[idx].unknown_value_trace_chain1 = read_bytes(1);
-    prefetch->trace_chains[idx].unknown_value_trace_chain2 = read_bytes(1);
-    prefetch->trace_chains[idx].unknown_value_trace_chain3 = read_bytes(2);
+    prefetch->trace_chains[idx].next_array_entry_index = r.read_uint32();
+    prefetch->trace_chains[idx].total_block_load_count = r.read_uint32();
+    prefetch->trace_chains[idx].unknown_value_trace_chain1 = r.read_bytes(1);
+    prefetch->trace_chains[idx].unknown_value_trace_chain2 = r.read_bytes(1);
+    prefetch->trace_chains[idx].unknown_value_trace_chain3 = r.read_bytes(2);
 
     printf("next entry = %" PRIu32 "\n", prefetch->trace_chains[idx].next_array_entry_index);
     printf("load count = %" PRIu32 "\n", prefetch->trace_chains[idx].total_block_load_count);
@@ -137,14 +137,14 @@ static void dump_file_metrics_23(t_pf *prefetch) {
 
   prefetch->metrics = calloc(prefetch->info.entries_a, sizeof(t_pf_metrics));
   while (idx < prefetch->info.entries_a) {
-    prefetch->metrics[idx].start_time = read_uint32();
-    prefetch->metrics[idx].duration = read_uint32();
-    prefetch->metrics[idx].average_duration = read_uint32();
-    prefetch->metrics[idx].filename_string_offset = read_uint32();
-    prefetch->metrics[idx].filename_string_len = read_uint32();
-    prefetch->metrics[idx].unknown_value_metrics1 = read_bytes(4);
-    prefetch->metrics[idx].file_ref.mft_entry_index = read_file_ref(read_bytes(6));;
-    prefetch->metrics[idx].file_ref.seq_number = bytes_to_uint16(read_bytes(2));
+    prefetch->metrics[idx].start_time = r.read_uint32();
+    prefetch->metrics[idx].duration = r.read_uint32();
+    prefetch->metrics[idx].average_duration = r.read_uint32();
+    prefetch->metrics[idx].filename_string_offset = r.read_uint32();
+    prefetch->metrics[idx].filename_string_len = r.read_uint32();
+    prefetch->metrics[idx].unknown_value_metrics1 = r.read_bytes(4);
+    prefetch->metrics[idx].file_ref.mft_entry_index = r.read_mft_entry();
+    prefetch->metrics[idx].file_ref.seq_number = r.read_uint16();
     
     printf("start time %" PRIu32 "\n", prefetch->metrics[idx].start_time);
     printf("duration %" PRIu32 "\n", prefetch->metrics[idx].duration);
@@ -172,25 +172,25 @@ void dump_file_metrics(t_pf *prefetch) {
 }
 
 static inline void get_base_info(t_pf *prefetch) {
-  prefetch->info.offset_sec_a  = read_uint32();
-  prefetch->info.entries_a = read_uint32();
-  prefetch->info.offset_sec_b = read_uint32();
-  prefetch->info.entries_b = read_uint32();
-  prefetch->info.offset_sec_c = read_uint32();
-  prefetch->info.len_c = read_uint32();
-  prefetch->info.offset_sec_d = read_uint32();
-  prefetch->info.entries_d = read_uint32();
-  prefetch->info.len_d = read_uint32();
+  prefetch->info.offset_sec_a = r.read_uint32();
+  prefetch->info.entries_a = r.read_uint32();
+  prefetch->info.offset_sec_b = r.read_uint32();
+  prefetch->info.entries_b = r.read_uint32();
+  prefetch->info.offset_sec_c = r.read_uint32();
+  prefetch->info.len_c = r.read_uint32();
+  prefetch->info.offset_sec_d = r.read_uint32();
+  prefetch->info.entries_d = r.read_uint32();
+  prefetch->info.len_d = r.read_uint32();
 }
 
 static void dump_file_info_23(t_pf *prefetch) {
   get_base_info(prefetch);
-  prefetch->info.unkown_value_info1 = read_bytes(8);
-  prefetch->info.last_executions[0] = read_timestamp_win_to_unix();
-  prefetch->info.unkown_value_info2 = read_bytes(16);
-  prefetch->info.execution_counter = read_uint32();
-  prefetch->info.unkown_value_info3 = read_bytes(4);
-  prefetch->info.unkown_value_info4 = read_bytes(80);
+  prefetch->info.unkown_value_info1 = r.read_bytes(8);
+  prefetch->info.last_executions[0] = r.read_timestamp_win_to_unix();
+  prefetch->info.unkown_value_info2 = r.read_bytes(16);
+  prefetch->info.execution_counter = r.read_uint32();
+  prefetch->info.unkown_value_info3 = r.read_bytes(4);
+  prefetch->info.unkown_value_info4 = r.read_bytes(80);
 
   printf("offset a = %"PRIu32"\n", prefetch->info.offset_sec_a);
   printf("entries a = %"PRIu32"\n", prefetch->info.entries_a);
@@ -220,13 +220,13 @@ void dump_file_info(t_pf *prefetch) {
 }
 
 static void dump_file_header(t_pf *prefetch) {
-  prefetch->header.format_version = read_uint32();
-  prefetch->header.signature = read_bytes(4);
-  prefetch->header.unknown_value_header1 = read_uint32();
-  prefetch->header.file_size = read_uint32();
-  prefetch->header.executable_name = read_string_utf16_to_utf8(30 * 2);
-  prefetch->header.pf_hash = read_uint32();
-  prefetch->header.unknown_value_header2 = read_bytes(4);
+  prefetch->header.format_version = r.read_uint32();
+  prefetch->header.signature = r.read_bytes(4);
+  prefetch->header.unknown_value_header1 = r.read_uint32();
+  prefetch->header.file_size = r.read_uint32();
+  prefetch->header.executable_name = r.read_string_utf16_to_utf8(30 * 2);
+  prefetch->header.pf_hash = r.read_uint32();
+  prefetch->header.unknown_value_header2 = r.read_bytes(4);
 
   /* This is for test purpose only, the output must be dealt with in the end */
   printf("Version: %" PRIu32 "\n", prefetch->header.format_version);

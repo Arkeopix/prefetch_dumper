@@ -1,7 +1,6 @@
 NAME	=	prefetchdump
 
 SRC	=	main.c				\
-		utils.c				\
 		reader.c			
 OBJ	=	${SRC:.c=.o}
 
