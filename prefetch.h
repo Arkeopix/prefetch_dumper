@@ -34,6 +34,11 @@ typedef struct s_pf_info {
   uint8_t *unkown_value_info4;
 } t_pf_info;
 
+typedef struct s_pf_file_ref {
+  uint64_t mft_entry_index;
+  uint16_t seq_number;
+} t_pf_file_ref;
+
 typedef struct s_pf_metrics {
   uint32_t start_time;
   uint32_t duration;
@@ -41,8 +46,7 @@ typedef struct s_pf_metrics {
   uint32_t filename_string_offset;
   uint32_t filename_string_len;
   uint8_t *unknown_value_metrics1;
-  uint64_t mft_entry_index;
-  uint16_t seq_number;
+  t_pf_file_ref file_ref;
 } t_pf_metrics;
 
 typedef struct s_pf_trace_chains {
@@ -53,12 +57,32 @@ typedef struct s_pf_trace_chains {
   uint8_t *unknown_value_trace_chain3;
 } t_pf_trace_chains;
 
+typedef struct s_pf_volume_info {
+  uint32_t offset_to_volume_device_path;
+  uint32_t len_volume_device_path;
+  time_t volume_creation_time;
+  uint32_t volume_serial_number;
+  uint32_t offset_to_subsec_e;
+  uint32_t len_subsec_e;
+  uint32_t offset_to_subsec_f;
+  uint32_t entries_subsec_f;
+  uint8_t *unknown_value_volumeinfo1;
+  uint8_t *unknown_value_volumeinfo2;
+  uint8_t *unknown_value_volumeinfo3;
+  uint8_t *unknown_value_volumeinfo4;
+  uint8_t *unknown_value_volumeinfo5;
+  char *volume_name;
+  t_pf_file_ref *file_refs;
+  char **directory_strings;
+} t_pf_volume_info;
+
 typedef struct s_pf {
   t_pf_header header;
   t_pf_info info;
   t_pf_metrics *metrics;
   t_pf_trace_chains *trace_chains;
-  char *filename_strings[];
+  char **filename_strings;
+  t_pf_volume_info *volume_info;
 } t_pf;
 
 #endif   /* !PREFETCH_H_ */

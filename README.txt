@@ -11,19 +11,22 @@ So far, one can see the following:
  - Run count
  - File metrics
  - Trace chains
+ - Filename strings
+ - Volume information
+ - NTFS File references
+ - Directory strings
 
 TODO:
  - refactor code to make it cleaner
    - get rid of uncalled function and superfluous includes
-   - rewrite code to get the info first, then print it. It will be easier this way.
    - get rid of those stupid read_(four|eight)_bytes() functions.
- - parse section C
- - parse section D
- - parse sub-section E
- - parse sub-section F
+   - maybe, just maybe, consider macro to avoid repeting yourself
+   - Check every return value
+   - improve prefetch struct and stuff some function pointer in it
  - convert all digit value to hex
- - dump unknown values anyway, as hex bytes à la hexdump
  - make sure to test every prefetch version
+   - version 17, 26, 30
    - Write a win10 prefetch decompresser
  - Make sure to double check the results, and maybe ask for people that knows best.
+ - Free all allocated memory
  - Write on this thing to make it stick.
