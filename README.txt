@@ -19,7 +19,6 @@ So far, one can see the following:
 TODO:
  - refactor code to make it cleaner
    - get rid of uncalled function and superfluous includes
-   - get rid of those stupid read_(four|eight)_bytes() functions.
    - maybe, just maybe, consider macro to avoid repeting yourself
    - Check every return value
    - improve prefetch struct and stuff some function pointer in it
